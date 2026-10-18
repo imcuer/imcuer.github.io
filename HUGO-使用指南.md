@@ -111,27 +111,54 @@ themes 目录里还有 Dream 主题，想试试只需两步：
 
 ## 七、部署
 
-本站已部署到 GitHub Pages：**https://imcuer.github.io/**（仓库：`imcuer/imcuer.github.io`）。
+本站同时部署在两处：
 
-部署是全自动的——**推送代码即发布**，无需本地构建：
+| 地址 | 方式 |
+|------|------|
+| **https://imcuer.github.io/** | GitHub Actions 自动部署（推送 main 分支即发布） |
+| **http://156.233.225.26/** | 自己的服务器（nginx，Ubuntu 22.04） |
+
+### 部署到自己的服务器
+
+服务器信息：
+- SSH：`root@156.233.225.26`，端口 `58865`
+- Web 根目录：`/var/www/hugo`
+- nginx 配置：`/etc/nginx/sites-available/hugo`
+
+更新流程（在本地执行）：
 
 ```powershell
 cd D:\Workbench\web\new-site
 
-# 1. 写完文章后提交并推送
+# 1. 构建
+hugo --gc --minify
+
+# 2. 打包并上传（用 PowerShell，需 Posh-SSH 模块）
+tar -czf "$env:TEMP\site.tar.gz" -C public .
+$pw = ConvertTo-SecureString '你的密码' -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential('root', $pw)
+Set-SCPItem -ComputerName '156.233.225.26' -Port 58865 -Credential $cred -AcceptKey -Path "$env:TEMP\site.tar.gz" -Destination '/tmp/' -Force
+
+# 3. 解压到 Web 根目录
+$s = New-SSHSession -ComputerName '156.233.225.26' -Port 58865 -Credential $cred -AcceptKey
+Invoke-SSHCommand -Index $s.SessionId -Command 'rm -rf /var/www/hugo/* && tar -xzf /tmp/site.tar.gz -C /var/www/hugo'
+```
+
+### GitHub Pages（自动）
+
+推送代码即发布，无需本地构建：
+
+```powershell
 git add content
 git commit -m "新文章：xxx"
 git push
-
-# 2. 等 1~2 分钟，访问 https://imcuer.github.io/ 即可看到更新
+# 等 1~2 分钟，访问 https://imcuer.github.io/ 即可看到更新
 ```
 
 原理：`.github/workflows/deploy.yaml` 定义了 GitHub Actions 工作流，每次 `git push` 到 `main` 分支时，GitHub 的服务器会自动安装 Hugo extended、执行 `hugo --gc --minify` 构建并发布到 Pages。可在 https://github.com/imcuer/imcuer.github.io/actions 查看每次部署状态。
 
 > 日常写作流程 = `hugo new post/xxx/index.md` → 写内容 → `hugo server --buildDrafts` 本地预览 → 满意后 `git add . && git commit && git push`。
-> 不再需要手动把 public/ 上传到任何地方。
-
-如需换其他托管（Cloudflare Pages / Netlify 等），本地执行 `hugo --gc --minify` 后上传 `public/` 目录即可。
+> 如需同步到自己的服务器，再执行上面"部署到自己的服务器"的 3 条命令。
 
 ## 八、遇到问题
 
