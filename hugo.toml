@@ -1,5 +1,5 @@
 baseURL                = "https://imcuer.github.io/"
-title                  = "我的站点"
+title                  = "imcuer 的矩阵"
 theme                  = "hugo-theme-stack-4.0.3"
 defaultContentLanguage = "zh"
 # 中文内容需要开启，否则摘要和字数统计不准确
@@ -25,6 +25,12 @@ hasCJKLanguage         = true
     [markup.goldmark.renderer]
         # 允许在 Markdown 中写 HTML
         unsafe = true
+    [markup.goldmark.extensions.passthrough]
+        # 数学公式支持：$$...$$ 块级，\(...\) 行内
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+            block  = [["\\[", "\\]"], ["$$", "$$"]]
+            inline = [["\\(", "\\)"]]
 
 [tableOfContents]
     startLevel = 2
@@ -40,12 +46,12 @@ hasCJKLanguage         = true
         since = 2026
 
     [params.sidebar]
-        emoji    = "✏️"
-        subtitle = "记录与分享"
+        emoji    = "🤖"
+        subtitle = "计算机 × 物理 × 哲学 | 在代码与宇宙之间漫游 | AI 与机器人驯养员"
         avatar   = "img/avatar.png"
 
     [params.article]
-        math        = false
+        math        = true
         toc         = true
         readingTime = true
         [params.article.license]
