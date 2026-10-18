@@ -111,12 +111,27 @@ themes 目录里还有 Dream 主题，想试试只需两步：
 
 ## 七、部署
 
+本站已部署到 GitHub Pages：**https://imcuer.github.io/**（仓库：`imcuer/imcuer.github.io`）。
+
+部署是全自动的——**推送代码即发布**，无需本地构建：
+
 ```powershell
-hugo --gc --minify
+cd D:\Workbench\web\new-site
+
+# 1. 写完文章后提交并推送
+git add content
+git commit -m "新文章：xxx"
+git push
+
+# 2. 等 1~2 分钟，访问 https://imcuer.github.io/ 即可看到更新
 ```
 
-把生成的 `public/` 目录里**所有文件**上传到任何静态托管即可：
-GitHub Pages / Cloudflare Pages / Netlify / Vercel / 自己的 Nginx 都行。
+原理：`.github/workflows/deploy.yaml` 定义了 GitHub Actions 工作流，每次 `git push` 到 `main` 分支时，GitHub 的服务器会自动安装 Hugo extended、执行 `hugo --gc --minify` 构建并发布到 Pages。可在 https://github.com/imcuer/imcuer.github.io/actions 查看每次部署状态。
+
+> 日常写作流程 = `hugo new post/xxx/index.md` → 写内容 → `hugo server --buildDrafts` 本地预览 → 满意后 `git add . && git commit && git push`。
+> 不再需要手动把 public/ 上传到任何地方。
+
+如需换其他托管（Cloudflare Pages / Netlify 等），本地执行 `hugo --gc --minify` 后上传 `public/` 目录即可。
 
 ## 八、遇到问题
 
