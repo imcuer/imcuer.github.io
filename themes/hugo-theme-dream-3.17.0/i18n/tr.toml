@@ -1,0 +1,34 @@
+# Uyarılar
+note = "Not"
+tip = "İpucu"
+important = "Önemli"
+warning = "Uyarı"
+caution = "Dikkat"
+
+home = "Ana sayfa"
+backToHome = "Ana sayfaya dön"
+flip = "Çevir!"
+about = "Hakkında"
+search = "Arama"
+prevPage = "Önceki sayfa"
+nextPage = "Sonraki sayfa"
+
+archives = "Arşivler"
+allCategories = "Tüm kategoriler"
+allTags = "Tüm etiketler"
+
+minuteRead = " dakikalık okuma"
+updatedAt = "Güncellenme tarihi"
+socialLinks = "Sosyal bağlantılar"
+
+[article]
+one = "1 makale"
+other = "{{ .Count }} makale"
+
+[category]
+one = "1 kategori"
+other = "{{ .Count }} kategori"
+
+[tag]
+one = "1 etiket"
+other = "{{ .Count }} etiket"

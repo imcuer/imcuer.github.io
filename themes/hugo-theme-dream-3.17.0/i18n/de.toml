@@ -1,0 +1,37 @@
+# Hinweise
+note = "Hinweis"
+tip = "Tipp"
+important = "Wichtig"
+warning = "Warnung"
+caution = "Vorsicht"
+
+home = "Startseite"
+backToHome = "Zurück zur Startseite"
+flip = "Umdrehen!"
+about = "Über"
+search = "Suche"
+prevPage = "Vorherige Seite"
+nextPage = "Nächste Seite"
+
+archives = "Archiv"
+allCategories = "Alle Kategorien"
+allTags = "Alle Tags"
+
+updatedAt = "Aktualisiert am"
+socialLinks = "Soziale Links"
+
+[minuteRead]
+one = " Minute Lesezeit"
+other = " Minuten Lesezeit"
+
+[article]
+one = "1 Artikel"
+other = "{{ .Count }} Artikel"
+
+[category]
+one = "1 Kategorie"
+other = "{{ .Count }} Kategorien"
+
+[tag]
+one = "1 Tag"
+other = "{{ .Count }} Tags"

@@ -1,0 +1,53 @@
+# التنبيهات
+note = "ملاحظة"
+tip = "تلميح"
+important = "مهم"
+warning = "تحذير"
+caution = "تنبيه"
+
+home = "الرئيسية"
+backToHome = "العودة إلى الصفحة الرئيسية"
+flip = "اقلبها!"
+about = "حول"
+search = "بحث"
+prevPage = "الصفحة السابقة"
+nextPage = "الصفحة التالية"
+
+archives = "الأرشيف"
+allCategories = "جميع الفئات"
+allTags = "جميع الوسوم"
+
+updatedAt = "آخر تحديث في"
+socialLinks = "روابط التواصل الاجتماعي"
+
+[minuteRead]
+zero = " دقيقة للقراءة"
+one = " دقيقة للقراءة"
+two = " دقيقة للقراءة"
+few = " دقائق للقراءة"
+many = " دقيقة للقراءة"
+other = " دقيقة للقراءة"
+
+[article]
+zero = "لا مقالات"
+one = "مقال واحد"
+two = "مقالان"
+few = "{{ .Count }} مقالات"
+many = "{{ .Count }} مقالًا"
+other = "{{ .Count }} مقال"
+
+[category]
+zero = "لا فئات"
+one = "فئة واحدة"
+two = "فئتان"
+few = "{{ .Count }} فئات"
+many = "{{ .Count }} فئة"
+other = "{{ .Count }} فئة"
+
+[tag]
+zero = "لا وسوم"
+one = "وسم واحد"
+two = "وسمان"
+few = "{{ .Count }} وسوم"
+many = "{{ .Count }} وسمًا"
+other = "{{ .Count }} وسم"

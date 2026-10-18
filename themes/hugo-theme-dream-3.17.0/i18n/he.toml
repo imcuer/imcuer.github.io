@@ -1,0 +1,41 @@
+# התראות
+note = "הערה"
+tip = "טיפ"
+important = "חשוב"
+warning = "אזהרה"
+caution = "זהירות"
+
+home = "דף הבית"
+backToHome = "חזרה לדף הבית"
+flip = "הפוך!"
+about = "אודות"
+search = "חיפוש"
+prevPage = "העמוד הקודם"
+nextPage = "העמוד הבא"
+
+archives = "ארכיון"
+allCategories = "כל הקטגוריות"
+allTags = "כל התגיות"
+
+updatedAt = "עודכן בתאריך"
+socialLinks = "קישורים לרשתות חברתיות"
+
+[minuteRead]
+one = " דקת קריאה"
+two = " דקות קריאה"
+other = " דקות קריאה"
+
+[article]
+one = "מאמר אחד"
+two = "שני מאמרים"
+other = "{{ .Count }} מאמרים"
+
+[category]
+one = "קטגוריה אחת"
+two = "שתי קטגוריות"
+other = "{{ .Count }} קטגוריות"
+
+[tag]
+one = "תגית אחת"
+two = "שתי תגיות"
+other = "{{ .Count }} תגיות"

@@ -1,0 +1,41 @@
+# Alerte
+note = "Notă"
+tip = "Sfat"
+important = "Important"
+warning = "Avertisment"
+caution = "Atenție"
+
+home = "Pagina principală"
+backToHome = "Înapoi la pagina principală"
+flip = "Întoarce!"
+about = "Despre"
+search = "Căutare"
+prevPage = "Pagina precedentă"
+nextPage = "Pagina următoare"
+
+archives = "Arhive"
+allCategories = "Toate categoriile"
+allTags = "Toate etichetele"
+
+updatedAt = "Actualizat la"
+socialLinks = "Linkuri către rețelele sociale"
+
+[minuteRead]
+one = " minut de lectură"
+few = " minute de lectură"
+other = " de minute de lectură"
+
+[article]
+one = "1 articol"
+few = "{{ .Count }} articole"
+other = "{{ .Count }} de articole"
+
+[category]
+one = "1 categorie"
+few = "{{ .Count }} categorii"
+other = "{{ .Count }} de categorii"
+
+[tag]
+one = "1 etichetă"
+few = "{{ .Count }} etichete"
+other = "{{ .Count }} de etichete"

@@ -1,0 +1,45 @@
+# Opozorila
+note = "Opomba"
+tip = "Nasvet"
+important = "Pomembno"
+warning = "Opozorilo"
+caution = "Previdno"
+
+home = "Domov"
+backToHome = "Nazaj domov"
+flip = "Obrni!"
+about = "O spletišču"
+search = "Iskanje"
+prevPage = "Prejšnja stran"
+nextPage = "Naslednja stran"
+
+archives = "Arhiv"
+allCategories = "Vse kategorije"
+allTags = "Vse oznake"
+
+updatedAt = "Posodobljeno"
+socialLinks = "Povezave do družbenih omrežij"
+
+[minuteRead]
+one = " minuta branja"
+two = " minuti branja"
+few = " minute branja"
+other = " minut branja"
+
+[article]
+one = "1 članek"
+two = "{{ .Count }} članka"
+few = "{{ .Count }} članki"
+other = "{{ .Count }} člankov"
+
+[category]
+one = "1 kategorija"
+two = "{{ .Count }} kategoriji"
+few = "{{ .Count }} kategorije"
+other = "{{ .Count }} kategorij"
+
+[tag]
+one = "1 oznaka"
+two = "{{ .Count }} oznaki"
+few = "{{ .Count }} oznake"
+other = "{{ .Count }} oznak"

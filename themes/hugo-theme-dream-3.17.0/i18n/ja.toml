@@ -1,0 +1,34 @@
+# アラート
+note = "注記"
+tip = "ヒント"
+important = "重要"
+warning = "警告"
+caution = "注意"
+
+home = "ホーム"
+backToHome = "ホームに戻る"
+flip = "裏返す！"
+about = "このサイトについて"
+search = "検索"
+prevPage = "前のページ"
+nextPage = "次のページ"
+
+archives = "アーカイブ"
+allCategories = "すべてのカテゴリー"
+allTags = "すべてのタグ"
+
+minuteRead = "分で読めます"
+updatedAt = "更新日"
+socialLinks = "ソーシャルリンク"
+
+[article]
+one = "1件の記事"
+other = "{{ .Count }}件の記事"
+
+[category]
+one = "1件のカテゴリー"
+other = "{{ .Count }}件のカテゴリー"
+
+[tag]
+one = "1件のタグ"
+other = "{{ .Count }}件のタグ"

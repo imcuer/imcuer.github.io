@@ -1,0 +1,34 @@
+# সতর্কবার্তা
+note = "নোট"
+tip = "পরামর্শ"
+important = "গুরুত্বপূর্ণ"
+warning = "সতর্কতা"
+caution = "সাবধান"
+
+home = "হোম"
+backToHome = "হোমে ফিরুন"
+flip = "উল্টে দিন!"
+about = "পরিচিতি"
+search = "অনুসন্ধান"
+prevPage = "আগের পৃষ্ঠা"
+nextPage = "পরের পৃষ্ঠা"
+
+archives = "আর্কাইভ"
+allCategories = "সব বিভাগ"
+allTags = "সব ট্যাগ"
+
+minuteRead = " মিনিটে পড়া যাবে"
+updatedAt = "আপডেট করা হয়েছে"
+socialLinks = "সামাজিক যোগাযোগের লিংক"
+
+[article]
+one = "1টি নিবন্ধ"
+other = "{{ .Count }}টি নিবন্ধ"
+
+[category]
+one = "1টি বিভাগ"
+other = "{{ .Count }}টি বিভাগ"
+
+[tag]
+one = "1টি ট্যাগ"
+other = "{{ .Count }}টি ট্যাগ"

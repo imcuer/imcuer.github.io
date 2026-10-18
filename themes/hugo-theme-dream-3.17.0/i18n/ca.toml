@@ -1,0 +1,37 @@
+# Alertes
+note = "Nota"
+tip = "Consell"
+important = "Important"
+warning = "Avís"
+caution = "Precaució"
+
+home = "Inici"
+backToHome = "Tornar a l'inici"
+flip = "Gira-la!"
+about = "Quant a"
+search = "Cerca"
+prevPage = "Pàgina anterior"
+nextPage = "Pàgina següent"
+
+archives = "Arxiu"
+allCategories = "Totes les categories"
+allTags = "Totes les etiquetes"
+
+updatedAt = "Actualitzat el"
+socialLinks = "Enllaços socials"
+
+[minuteRead]
+one = " minut de lectura"
+other = " minuts de lectura"
+
+[article]
+one = "1 article"
+other = "{{ .Count }} articles"
+
+[category]
+one = "1 categoria"
+other = "{{ .Count }} categories"
+
+[tag]
+one = "1 etiqueta"
+other = "{{ .Count }} etiquetes"

@@ -1,0 +1,37 @@
+# Alertas
+note = "Nota"
+tip = "Consejo"
+important = "Importante"
+warning = "Advertencia"
+caution = "Precaución"
+
+home = "Inicio"
+backToHome = "Volver al inicio"
+flip = "¡Voltear!"
+about = "Acerca de"
+search = "Buscar"
+prevPage = "Página anterior"
+nextPage = "Página siguiente"
+
+archives = "Archivo"
+allCategories = "Todas las categorías"
+allTags = "Todas las etiquetas"
+
+updatedAt = "Actualizado el"
+socialLinks = "Enlaces sociales"
+
+[minuteRead]
+one = " minuto de lectura"
+other = " minutos de lectura"
+
+[article]
+one = "1 artículo"
+other = "{{ .Count }} artículos"
+
+[category]
+one = "1 categoría"
+other = "{{ .Count }} categorías"
+
+[tag]
+one = "1 etiqueta"
+other = "{{ .Count }} etiquetas"

@@ -1,0 +1,97 @@
+baseURL                = "https://imcuer.github.io/"
+title                  = "我的站点"
+theme                  = "hugo-theme-stack-4.0.3"
+defaultContentLanguage = "zh"
+# 中文内容需要开启，否则摘要和字数统计不准确
+hasCJKLanguage         = true
+
+[pagination]
+    pagerSize = 5
+
+[permalinks]
+    post = "/p/:slug/"
+    page = "/:slug/"
+
+# 代码高亮
+[markup]
+    [markup.highlight]
+        noClasses          = false
+        codeFences         = true
+        guessSyntax        = true
+        lineNoStart        = 1
+        lineNos            = true
+        lineNumbersInTable = true
+        tabWidth           = 4
+    [markup.goldmark.renderer]
+        # 允许在 Markdown 中写 HTML
+        unsafe = true
+
+[tableOfContents]
+    startLevel = 2
+    endLevel   = 4
+    ordered    = true
+
+# 主题参数
+[params]
+    mainSections   = ["post"]
+    rssFullContent = true
+
+    [params.footer]
+        since = 2026
+
+    [params.sidebar]
+        emoji    = "✏️"
+        subtitle = "记录与分享"
+        avatar   = "img/avatar.png"
+
+    [params.article]
+        math        = false
+        toc         = true
+        readingTime = true
+        [params.article.license]
+            enabled = true
+            default = "Licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)"
+
+    # 主页右侧小部件
+    [params.widgets]
+        homepage = [
+            { type = "search" },
+            { type = "archives", params = { limit = 5 } },
+            { type = "categories", params = { limit = 10 } },
+            { type = "tag-cloud", params = { limit = 10 } },
+        ]
+        page = [{ type = "toc" }]
+
+    # 评论先关闭，需要时再开
+    [params.comments]
+        enabled = false
+
+# 左侧导航菜单
+[[menu.main]]
+    identifier = "home"
+    name       = "主页"
+    url        = "/"
+    weight     = -100
+    [menu.main.params]
+        icon = "home"
+
+[[menu.main]]
+    identifier = "about"
+    name       = "关于"
+    url        = "/about/"
+    [menu.main.params]
+        icon = "user"
+
+[[menu.main]]
+    identifier = "archives"
+    name       = "归档"
+    url        = "/archives/"
+    [menu.main.params]
+        icon = "archives"
+
+[[menu.main]]
+    identifier = "search"
+    name       = "搜索"
+    url        = "/search/"
+    [menu.main.params]
+        icon = "search"

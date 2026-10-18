@@ -1,0 +1,9 @@
+# Hugo 构建输出
+/public/
+/resources/_gen/
+/assets/jsconfig.json
+.hugo_build.lock
+
+# 系统文件
+Thumbs.db
+.DS_Store

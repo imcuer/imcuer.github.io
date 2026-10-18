@@ -1,0 +1,41 @@
+# Brīdinājumi
+note = "Piezīme"
+tip = "Padoms"
+important = "Svarīgi"
+warning = "Brīdinājums"
+caution = "Uzmanību"
+
+home = "Sākums"
+backToHome = "Atpakaļ uz sākumu"
+flip = "Apgriezt!"
+about = "Par"
+search = "Meklēt"
+prevPage = "Iepriekšējā lapa"
+nextPage = "Nākamā lapa"
+
+archives = "Arhīvs"
+allCategories = "Visas kategorijas"
+allTags = "Visi tagi"
+
+updatedAt = "Atjaunināts"
+socialLinks = "Sociālo tīklu saites"
+
+[minuteRead]
+zero = " minūšu lasīšanai"
+one = " minūte lasīšanai"
+other = " minūtes lasīšanai"
+
+[article]
+zero = "{{ .Count }} rakstu"
+one = "1 raksts"
+other = "{{ .Count }} raksti"
+
+[category]
+zero = "{{ .Count }} kategoriju"
+one = "1 kategorija"
+other = "{{ .Count }} kategorijas"
+
+[tag]
+zero = "{{ .Count }} tagu"
+one = "1 tags"
+other = "{{ .Count }} tagi"
