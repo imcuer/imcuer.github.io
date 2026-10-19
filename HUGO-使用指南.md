@@ -115,8 +115,10 @@ themes 目录里还有 Dream 主题，想试试只需两步：
 
 | 地址 | 方式 |
 |------|------|
+| **https://www.imcuer.com/** | 主站，自己的服务器（nginx，Ubuntu 22.04） |
 | **https://imcuer.github.io/** | GitHub Actions 自动部署（推送 main 分支即发布） |
-| **https://156.233.225.26/** | 自己的服务器（nginx，Ubuntu 22.04） |
+
+> `hugo.toml` 里的 `baseURL` 设为 `https://www.imcuer.com/`，所以 canonical / RSS / sitemap 都指向主站。
 
 ### 部署到自己的服务器
 
@@ -124,16 +126,14 @@ themes 目录里还有 Dream 主题，想试试只需两步：
 - SSH：`root@156.233.225.26`，端口 `58865`
 - Web 根目录：`/var/www/hugo`
 - nginx 配置：`/etc/nginx/sites-available/hugo`
-- SSL 证书：`/etc/nginx/ssl/hugo.crt`（自签名，有效期 10 年）
+- SSL 证书：`/etc/letsencrypt/live/www.imcuer.com/`（Let's Encrypt 签发，浏览器信任）
 
-> **关于 HTTPS 证书**：服务器只有 IP 没有域名，无法用 Let's Encrypt 免费签发，所以用了自签名证书。
-> 浏览器首次访问会提示"证书不受信任"，点击「高级 → 继续访问」即可（因为是自己的站点，安全）。
-> 访问 `http://156.233.225.26/` 会自动 301 跳转到 `https://`。
-> 若以后绑定了域名，可改用 Let's Encrypt 免费证书消除警告：
-> ```bash
-> apt install -y certbot python3-certbot-nginx
-> certbot --nginx -d 你的域名
-> ```
+> **关于 HTTPS 证书**：`www.imcuer.com` 已解析到本服务器（156.233.225.26），证书由 Let's Encrypt 免费签发，
+> 有效期 90 天，certbot 已配置自动续期（`systemctl list-timers certbot.timer` 可查看）。
+> 访问 `http://www.imcuer.com/` 会自动 301 跳转到 `https://`。
+> 手动续期测试：`certbot renew --dry-run`。
+>
+> 注：直接用 IP `https://156.233.225.26/` 访问仍会提示证书不受信任（证书是给域名的），请用域名访问。
 
 更新流程（在本地执行）：
 

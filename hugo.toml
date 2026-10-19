@@ -1,4 +1,4 @@
-baseURL                = "https://imcuer.github.io/"
+baseURL                = "https://www.imcuer.com/"
 title                  = "imcuer 的矩阵"
 theme                  = "hugo-theme-stack-4.0.3"
 defaultContentLanguage = "zh"
