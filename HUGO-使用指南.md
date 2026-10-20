@@ -134,6 +134,8 @@ themes 目录里还有 Dream 主题，想试试只需两步：
 > 手动续期测试：`certbot renew --dry-run`。
 >
 > 注：直接用 IP `https://156.233.225.26/` 访问仍会提示证书不受信任（证书是给域名的），请用域名访问。
+>
+> **完整的 HTTPS 配置与排错步骤**（certbot 签发、nginx 配置、自动续期、常见坑）见 [HTTPS-配置指南.md](HTTPS-配置指南.md)。
 
 更新流程（在本地执行）：
 
@@ -170,7 +172,26 @@ git push
 > 日常写作流程 = `hugo new post/xxx/index.md` → 写内容 → `hugo server --buildDrafts` 本地预览 → 满意后 `git add . && git commit && git push`。
 > 如需同步到自己的服务器，再执行上面"部署到自己的服务器"的 3 条命令。
 
-## 八、遇到问题
+## 八、后台管理程序（图形界面）
+
+不想敲命令可以用自带的 Web 后台管理，位于 `admin/` 目录（Node.js 零依赖，无需 npm install）：
+
+```powershell
+node D:\Workbench\web\new-site\admin\server.js
+# 浏览器打开 http://127.0.0.1:3210
+```
+
+功能：
+
+- **文章/页面列表**：左侧切换文章/页面，显示标题、日期、草稿标记
+- **新建/编辑/删除**：Front Matter 表单化编辑（标题、slug、日期、草稿、分类、标签、封面图），正文用 EasyMDE 编辑器（带工具栏和预览）
+- **本地预览**：顶栏「本地预览」按钮 = `hugo server --buildDrafts`，再按一次停止
+- **hugo 命令行**：顶栏输入框可直接执行任意 hugo 命令（如 `version`、`new post/xxx/index.md`）
+- **一键发布**：可选发布到自己的服务器（SCP 上传，密码每次输入、不保存）和/或 GitHub Pages（git push），日志实时显示在底部面板
+
+> 仅监听 127.0.0.1，外部无法访问；用完直接 `Ctrl+C` 关掉 node 进程即可。
+
+## 九、遇到问题
 
 | 症状 | 原因与解决 |
 |------|-----------|
