@@ -1,14 +1,14 @@
 ---
 title: "你好，世界"
-description: "我的第一篇文章"
+description: "我的 第一篇文章"
 date: 2026-10-19T06:00:00+08:00
 slug: "hello-world"
+draft: false
 categories:
-    - 随笔
+    - "随笔"
 tags:
-    - Hugo
+    - "Hugo"
 ---
-
 这是我的第一篇文章，站点基于 **Hugo** + **Stack 主题** 搭建。
 
 ## Markdown 示例
@@ -24,9 +24,9 @@ def hello():
 
 ### 列表
 
-- 第一项
-- 第二项
-- 第三项
+* 第一项
+* 第二项
+* 第三项 test
 
 ### 引用
 

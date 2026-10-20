@@ -288,6 +288,22 @@ const server = http.createServer(async (req, res) => {
             json({ ok: true });
             return;
         }
+        // 读取 hugo.toml 配置
+        if (url.pathname === '/api/config' && req.method === 'GET') {
+            const configPath = path.join(ROOT, 'hugo.toml');
+            const content = fs.readFileSync(configPath, 'utf8');
+            json({ content });
+            return;
+        }
+        // 保存 hugo.toml 配置
+        if (url.pathname === '/api/config' && req.method === 'POST') {
+            const { content } = await readBody(req);
+            const configPath = path.join(ROOT, 'hugo.toml');
+            fs.writeFileSync(configPath, content);
+            broadcast('sys', '已保存 hugo.toml');
+            json({ ok: true });
+            return;
+        }
         // hugo 命令行接口（如 "version" / "new post/x/index.md" / "--gc --minify"）
         if (url.pathname === '/api/hugo' && req.method === 'POST') {
             const { args } = await readBody(req);

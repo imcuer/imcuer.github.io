@@ -1,5 +1,5 @@
 baseURL                = "https://www.imcuer.com/"
-title                  = "imcuer 的矩阵"
+title = "imcuer的矩阵空间"
 theme                  = "hugo-theme-stack-4.0.3"
 defaultContentLanguage = "zh"
 # 中文内容需要开启，否则摘要和字数统计不准确
@@ -47,7 +47,7 @@ hasCJKLanguage         = true
 
     [params.sidebar]
         emoji    = "🤖"
-        subtitle = "计算机 × 物理 × 哲学 | 在代码与宇宙之间漫游 | AI 与机器人驯养员"
+        subtitle = "计算机 | 物理 |哲学 | 代码与宇宙之间 | AI 与机器人驯养"
         avatar   = "img/avatar.png"
 
     [params.article]

@@ -35,6 +35,41 @@
             let hoverEl = null;
             let elementCounter = 0;
 
+            // Front Matter 字段映射
+            const FM_FIELDS = {
+                '.article-title': 'title',
+                '.article-subtitle': 'description',
+                '.article-time--published': 'date',
+                '.article-category a': 'categories',
+                '.article-tags a': 'tags'
+            };
+
+            // 站点配置字段映射
+            const SITE_FIELDS = {
+                '.site-name': 'title',
+                '.site-description': 'params.sidebar.subtitle'
+            };
+
+            // 查找元素对应的 Front Matter 字段
+            function findFrontMatterField(el) {
+                for (const [selector, field] of Object.entries(FM_FIELDS)) {
+                    if (el.matches(selector) || el.closest(selector)) {
+                        return field;
+                    }
+                }
+                return null;
+            }
+
+            // 查找元素对应的站点配置字段
+            function findSiteField(el) {
+                for (const [selector, field] of Object.entries(SITE_FIELDS)) {
+                    if (el.matches(selector) || el.closest(selector)) {
+                        return field;
+                    }
+                }
+                return null;
+            }
+
             // 为所有元素添加唯一标识
             function markElements() {
                 document.querySelectorAll('*').forEach(el => {
@@ -72,6 +107,8 @@
                 el.style.outline = '2px solid #1f6feb';
                 el.style.outlineOffset = '2px';
                 const editId = el.getAttribute('data-hugo-edit-id');
+                const fmField = findFrontMatterField(el);
+                const siteField = findSiteField(el);
                 window.parent.postMessage({
                     type: 'hugo-element-select',
                     info: {
@@ -81,7 +118,9 @@
                         className: el.className,
                         id: el.id,
                         style: el.style.cssText,
-                        html: el.outerHTML
+                        html: el.outerHTML,
+                        fmField: fmField,  // Front Matter 字段名
+                        siteField: siteField  // 站点配置字段名
                     }
                 }, '*');
             }
@@ -89,16 +128,32 @@
             // 监听父页面消息
             window.addEventListener('message', function(e) {
                 if (e.data && e.data.type === 'hugo-update-element' && e.data.editId) {
+                    console.log('iframe 收到更新消息:', e.data);
                     // 通过 editId 找到元素
                     const el = document.querySelector(`[data-hugo-edit-id="${e.data.editId}"]`);
-                    if (!el) return;
+                    if (!el) {
+                        console.error('找不到元素:', e.data.editId);
+                        return;
+                    }
                     if (e.data.text !== undefined) el.textContent = e.data.text;
                     if (e.data.className !== undefined) el.className = e.data.className;
                     if (e.data.id !== undefined) el.id = e.data.id;
                     if (e.data.style !== undefined) el.style.cssText = e.data.style;
-                    window.parent.postMessage({ type: 'hugo-element-updated', html: el.outerHTML }, '*');
+
+                    // 如果是 Front Matter 字段，不发送内容更新（Front Matter 由表单管理）
+                    const fmField = findFrontMatterField(el);
+                    if (fmField) {
+                        console.log('Front Matter 字段已更新，不发送内容更新');
+                        return;
+                    }
+
+                    // 正文内容不自动保存（格式复杂，建议用 Markdown 编辑器）
+                    console.log('正文内容已更新，但不自动保存（格式复杂，建议用 Markdown 编辑器）');
+                    return;
                 } else if (e.data && e.data.type === 'hugo-deselect') {
                     deselectElement();
+                } else if (e.data && e.data.type === 'hugo-reload') {
+                    location.reload();
                 }
             });
 
@@ -118,8 +173,9 @@
                 }
             }, true);
 
-            // 点击选中
+            // 点击选中（按住 Ctrl 键时才选中，否则允许页面跳转）
             document.addEventListener('click', function(e) {
+                if (!e.ctrlKey && !e.metaKey) return;  // 只在按住 Ctrl/Cmd 键时才选中
                 const el = e.target;
                 e.preventDefault();
                 e.stopPropagation();

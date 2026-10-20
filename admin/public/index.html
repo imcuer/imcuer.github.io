@@ -314,7 +314,10 @@ function updatePreview() {
 }
 
 function refreshPreview() {
-    if ($('preview-frame').src) $('preview-frame').contentWindow.location.reload();
+    const frame = $('preview-frame');
+    if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: 'hugo-reload' }, '*');
+    }
 }
 
 function clearPropsPanel() {
@@ -343,29 +346,174 @@ window.addEventListener('message', function(e) {
         $('prop-id').value = data.info.id || '';
         $('prop-style').value = data.info.style || '';
         $('prop-html').textContent = data.info.html ? data.info.html.slice(0, 100) + '...' : '-';
+
+        // 如果是 Front Matter 字段，显示提示并同步到表单
+        if (data.info.fmField) {
+            const fieldNames = {
+                'title': '标题',
+                'description': '描述',
+                'date': '日期',
+                'categories': '分类',
+                'tags': '标签',
+                'readingTime': '阅读时长'
+            };
+            const fieldName = fieldNames[data.info.fmField] || data.info.fmField;
+            showStatus(`📝 这是 Front Matter 字段：${fieldName}，修改后会同步到表单`);
+
+            // 同步到 Front Matter 表单
+            if (data.info.fmField === 'title') {
+                $('f-title').value = data.info.text.trim();
+            } else if (data.info.fmField === 'description') {
+                $('f-description').value = data.info.text.trim();
+            } else if (data.info.fmField === 'date') {
+                // 尝试解析日期文本，转换为 datetime-local 格式
+                const dateText = data.info.text.trim();
+                // 这里可以根据需要解析日期文本
+                console.log('日期字段:', dateText);
+            }
+        }
+        // 如果是站点配置字段，显示提示
+        else if (data.info.siteField) {
+            const fieldNames = {
+                'title': '站点标题',
+                'params.sidebar.subtitle': '站点副标题'
+            };
+            const fieldName = fieldNames[data.info.siteField] || data.info.siteField;
+            showStatus(`📝 这是站点配置字段：${fieldName}，修改后会同步到 hugo.toml`);
+        }
     }
-    else if (data.type === 'hugo-element-updated' && data.html) {
-        if (!editor) return;
+    else if (data.type === 'hugo-content-updated' && data.html) {
+        console.log('主页面收到内容更新:', data.html.slice(0, 100));
+        if (!editor) {
+            console.error('editor 未初始化');
+            return;
+        }
+        // 用 DOMParser 解析 HTML，只提取文章正文
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.html, 'text/html');
+        const articleContent = doc.querySelector('.article-content');
+        const articleTitle = doc.querySelector('.article-title');
+        let cleanHtml = '';
+        if (articleTitle) cleanHtml += articleTitle.outerHTML;
+        if (articleContent) cleanHtml += articleContent.outerHTML;
+        console.log('提取的 HTML:', cleanHtml.slice(0, 100));
         const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
-        const md = turndown.turndown(data.html);
-        showStatus(`✅ 已同步到源码`);
+        // 自定义规则：标题内的链接转成普通文本
+        turndown.addRule('headingLink', {
+            filter: function(node) {
+                return node.nodeName === 'A' && node.parentNode && /^H[1-6]$/.test(node.parentNode.nodeName);
+            },
+            replacement: function(content) {
+                return content;
+            }
+        });
+        const md = turndown.turndown(cleanHtml);
+        console.log('转换后的 Markdown:', md.slice(0, 100));
+        // 直接替换整个正文
+        editor.setMarkdown(md);
+        showStatus(`✅ 已同步到源码，正在保存...`);
+        // 自动保存到文件（直接用转换后的 md，不从 editor 获取）
+        setTimeout(async () => {
+            console.log('开始保存文件');
+            console.log('保存的 Markdown:', md.slice(0, 100));
+            const fm = {
+                title: $('f-title').value,
+                description: $('f-description').value,
+                date: $('f-date').value,
+                slug: $('f-slug').value,
+                draft: $('f-draft').checked,
+                image: $('f-image').value || undefined,
+                categories: splitList($('f-categories').value),
+                tags: splitList($('f-tags').value)
+            };
+            const r = await post('/api/save', { path: currentFile, fm, extra: $('f-extra').value, body: md });
+            console.log('保存结果:', r);
+            if (r.ok) {
+                showStatus('✅ 修改已保存到文件，刷新后生效');
+                loadList();
+            } else {
+                showStatus('❌ 保存失败: ' + r.error);
+            }
+        }, 500);
     }
 });
 
+function showStatus(msg) {
+    $('save-status').textContent = msg;
+    setTimeout(() => { if ($('save-status').textContent === msg) $('save-status').textContent = ''; }, 3000);
+}
+
 /* ---------- 属性面板操作 ---------- */
-$('btn-prop-save').onclick = () => {
+$('btn-prop-save').onclick = async () => {
     if (!selectedElement || !selectedElement.editId) return;
-    const frame = $('preview-frame');
-    if (frame && frame.contentWindow) {
-        frame.contentWindow.postMessage({
-            type: 'hugo-update-element',
-            editId: selectedElement.editId,
-            text: $('prop-text').value,
-            className: $('prop-class').value,
-            id: $('prop-id').value,
-            style: $('prop-style').value
-        }, '*');
-        showStatus('💾 修改已发送到预览页面');
+
+    // 如果是站点配置字段，保存到 hugo.toml
+    if (selectedElement.siteField) {
+        const text = $('prop-text').value.trim();
+        showStatus('✅ 站点配置字段已更新，正在保存到 hugo.toml...');
+
+        // 读取当前配置
+        const config = await api('/api/config');
+        let content = config.content;
+
+        // 更新配置
+        if (selectedElement.siteField === 'title') {
+            content = content.replace(/^title\s*=\s*"([^"]*)"/m, `title = "${text}"`);
+        } else if (selectedElement.siteField === 'params.sidebar.subtitle') {
+            content = content.replace(/^(\s*)subtitle\s*=\s*"([^"]*)"/m, `$1subtitle = "${text}"`);
+        }
+
+        // 保存配置
+        const r = await post('/api/config', { content });
+        if (r.ok) {
+            showStatus('✅ 站点配置已保存到 hugo.toml，刷新后生效');
+            // 触发重新构建
+            setTimeout(() => {
+                refreshPreview();
+            }, 1000);
+        } else {
+            showStatus('❌ 保存失败: ' + r.error);
+        }
+        return;
+    }
+
+    // 如果是 Front Matter 字段，只更新 Front Matter，不修改正文
+    if (selectedElement.fmField) {
+        const text = $('prop-text').value.trim();
+        if (selectedElement.fmField === 'title') {
+            $('f-title').value = text;
+        } else if (selectedElement.fmField === 'description') {
+            $('f-description').value = text;
+        }
+        showStatus('✅ Front Matter 字段已同步到表单，正在保存...');
+
+        // 自动保存到文件（只更新 Front Matter，正文保持不变）
+        setTimeout(async () => {
+            const fm = {
+                title: $('f-title').value,
+                description: $('f-description').value,
+                date: $('f-date').value,
+                slug: $('f-slug').value,
+                draft: $('f-draft').checked,
+                image: $('f-image').value || undefined,
+                categories: splitList($('f-categories').value),
+                tags: splitList($('f-tags').value)
+            };
+            // 从当前文件读取正文，不修改
+            const currentContent = await api('/api/file?path=' + encodeURIComponent(currentFile));
+            const r = await post('/api/save', { path: currentFile, fm, extra: $('f-extra').value, body: currentContent.body || '' });
+            if (r.ok) {
+                showStatus('✅ Front Matter 字段已保存到文件，刷新后生效');
+                loadList();
+                refreshPreview();
+            } else {
+                showStatus('❌ 保存失败: ' + r.error);
+            }
+        }, 500);
+    } else {
+        // 正文内容，提示用 Markdown 编辑器修改
+        showStatus('⚠️ 正文内容请在下方 Markdown 编辑器中修改（格式更可靠）');
+        $('editor-section').classList.add('show');
     }
 };
 
@@ -386,7 +534,7 @@ $('fm-toggle').onclick = () => {
 $('editor-toggle').onclick = () => {
     const expanded = $('editor-section').classList.toggle('expanded');
     $('editor-toggle').textContent = expanded ? '▲ Markdown 源码编辑器（点击收起）' : '▼ Markdown 源码编辑器（点击展开）';
-    if (expanded && editor) editor.refresh();
+    // Toast UI Editor 不需要 refresh，它会自动调整大小
 };
 
 /* ---------- 日志 ---------- */
