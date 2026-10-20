@@ -137,6 +137,27 @@
             <label><input type="checkbox" id="pub-server" checked> 自己的服务器（imcuer.com）</label>
             <label><input type="checkbox" id="pub-github"> GitHub Pages</label>
         </div>
+        <div class="row" id="row-server-config">
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">
+                <div><label>服务器地址</label><input type="text" id="pub-host" style="width:100%"></div>
+                <div><label>SSH 端口</label><input type="text" id="pub-port" style="width:100%"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                <div><label>SSH 用户名</label><input type="text" id="pub-user" style="width:100%"></div>
+                <div><label>Web 根目录</label><input type="text" id="pub-webroot" style="width:100%"></div>
+            </div>
+        </div>
+        <div class="row" id="row-auth">
+            <label style="color:var(--fg)">认证方式</label>
+            <div style="display:flex;gap:18px;margin-top:4px">
+                <label><input type="radio" name="auth-type" id="auth-key" value="key" checked> SSH 密钥（推荐，无密码）</label>
+                <label><input type="radio" name="auth-type" id="auth-pass" value="password"> 密码</label>
+            </div>
+        </div>
+        <div class="row" id="row-keyfile">
+            <label>密钥文件路径（留空自动使用默认 ~/.ssh/ 密钥）</label>
+            <input type="text" id="pub-keyfile" placeholder="C:\Users\用户名\.ssh\id_ed25519" style="width:100%">
+        </div>
         <div class="row" id="row-password">
             <label>服务器 SSH 密码（仅本次使用，不保存）</label>
             <input type="password" id="pub-password" autocomplete="off">
@@ -278,19 +299,67 @@ $('btn-hugo').onclick = () => {
 $('hugo-args').onkeydown = e => { if (e.key === 'Enter') $('btn-hugo').click(); };
 
 const mask = $('modal-mask');
-$('btn-publish').onclick = () => mask.classList.add('show');
+
+/* 服务器配置：默认值 + localStorage 持久化（密码不存） */
+const SERVER_DEFAULTS = { host: '156.233.225.26', port: '58865', user: 'root', webRoot: '/var/www/hugo', authType: 'key', keyFile: '' };
+function loadServerConfig() {
+    const saved = JSON.parse(localStorage.getItem('hugo-admin-server') || '{}');
+    $('pub-host').value = saved.host || SERVER_DEFAULTS.host;
+    $('pub-port').value = saved.port || SERVER_DEFAULTS.port;
+    $('pub-user').value = saved.user || SERVER_DEFAULTS.user;
+    $('pub-webroot').value = saved.webRoot || SERVER_DEFAULTS.webRoot;
+    $('pub-keyfile').value = saved.keyFile || '';
+    const authType = saved.authType || SERVER_DEFAULTS.authType;
+    $(authType === 'password' ? 'auth-pass' : 'auth-key').checked = true;
+    toggleAuthRows();
+}
+function saveServerConfig() {
+    localStorage.setItem('hugo-admin-server', JSON.stringify({
+        host: $('pub-host').value.trim(),
+        port: $('pub-port').value.trim(),
+        user: $('pub-user').value.trim(),
+        webRoot: $('pub-webroot').value.trim(),
+        authType: $('auth-pass').checked ? 'password' : 'key',
+        keyFile: $('pub-keyfile').value.trim()
+    }));
+}
+function toggleAuthRows() {
+    const isPass = $('auth-pass').checked;
+    $('row-keyfile').style.display = isPass ? 'none' : 'block';
+    $('row-password').style.display = isPass ? 'block' : 'none';
+}
+
+$('btn-publish').onclick = () => { loadServerConfig(); mask.classList.add('show'); };
 $('pub-cancel').onclick = () => mask.classList.remove('show');
-$('pub-server').onchange = e => $('row-password').style.display = e.target.checked ? 'block' : 'none';
+$('pub-server').onchange = e => {
+    const show = e.target.checked ? 'block' : 'none';
+    $('row-server-config').style.display = show;
+    $('row-auth').style.display = show;
+    toggleAuthRows();
+};
+$('auth-key').onchange = toggleAuthRows;
+$('auth-pass').onchange = toggleAuthRows;
 $('pub-github').onchange = e => $('row-commit').style.display = e.target.checked ? 'block' : 'none';
 $('pub-go').onclick = async () => {
     const targetServer = $('pub-server').checked, targetGithub = $('pub-github').checked;
+    const authType = $('auth-pass').checked ? 'password' : 'key';
     if (!targetServer && !targetGithub) return alert('至少选择一个发布目标');
-    if (targetServer && !$('pub-password').value) return alert('发布到服务器需要填写 SSH 密码');
+    if (targetServer && authType === 'password' && !$('pub-password').value) return alert('密码认证方式需要填写 SSH 密码');
+    if (targetServer && (!$('pub-host').value.trim() || !$('pub-port').value.trim())) return alert('请填写服务器地址和 SSH 端口');
+    saveServerConfig();
     mask.classList.remove('show');
     const r = await post('/api/publish', {
         targetServer, targetGithub,
         password: $('pub-password').value,
-        commitMsg: $('pub-commit').value
+        commitMsg: $('pub-commit').value,
+        server: {
+            host: $('pub-host').value.trim(),
+            port: parseInt($('pub-port').value.trim(), 10),
+            user: $('pub-user').value.trim(),
+            webRoot: $('pub-webroot').value.trim(),
+            authType,
+            keyFile: $('pub-keyfile').value.trim()
+        }
     });
     if (r.error) alert('发布启动失败: ' + r.error);
     $('pub-password').value = '';   // 用完即清

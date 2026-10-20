@@ -13,8 +13,8 @@ const ROOT = path.resolve(__dirname, '..');          // 站点根目录
 const CONTENT = path.join(ROOT, 'content');
 const PORT = 3210;
 
-// 服务器信息（密码不落盘，发布时由前端传入）
-const SERVER = { host: '156.233.225.26', port: 58865, user: 'root', webRoot: '/var/www/hugo' };
+// 服务器默认值（密码不落盘，发布时由前端传入；前端可覆盖以下全部字段）
+const DEFAULT_SERVER = { host: '156.233.225.26', port: 58865, user: 'root', webRoot: '/var/www/hugo' };
 
 /* ---------------- SSE 日志广播 ---------------- */
 const sseClients = [];
@@ -106,7 +106,11 @@ function safeContentPath(rel) {
 function run(cmd, args, opts = {}) {
     return new Promise((resolve, reject) => {
         broadcast(opts.tag || 'cmd', `$ ${cmd} ${args.join(' ')}`);
-        const child = spawn(cmd, args, { cwd: ROOT, shell: true, env: { ...process.env, ...(opts.env || {}) } });
+        const child = spawn(cmd, args, {
+            cwd: ROOT,
+            shell: opts.shell !== false,   // ssh/scp 等用 shell:false，参数原样传递
+            env: { ...process.env, ...(opts.env || {}) }
+        });
         const onData = tag => data => String(data).split(/\r?\n/).filter(Boolean).forEach(l => broadcast(tag, l));
         child.stdout.on('data', onData(opts.tag || 'cmd'));
         child.stderr.on('data', onData(opts.tag || 'cmd'));
@@ -137,34 +141,47 @@ function stopPreview() {
 
 /* ---------------- 发布流程 ---------------- */
 let publishing = false;
-async function publish({ targetServer, targetGithub, password, commitMsg }) {
+async function publish({ targetServer, targetGithub, password, commitMsg, server }) {
     if (publishing) throw new Error('已有发布任务进行中');
     publishing = true;
+    const srv = { ...DEFAULT_SERVER, ...(server || {}) };
     try {
         broadcast('publish', '==== 开始发布 ====');
         await run('hugo', ['--gc', '--minify'], { tag: 'publish' });
         broadcast('publish', '[1/3] 构建完成');
 
         if (targetServer) {
-            if (!password) throw new Error('发布到服务器需要 SSH 密码');
+            const useKey = srv.authType !== 'password';
+            if (!useKey && !password) throw new Error('密码认证方式需要填写 SSH 密码');
+            broadcast('publish', `目标服务器: ${srv.user}@${srv.host}:${srv.port} → ${srv.webRoot}（认证: ${useKey ? 'SSH 密钥' : '密码'}）`);
             const pkg = path.join(os.tmpdir(), 'site.tar.gz');
             await run('tar', ['-czf', pkg, '-C', 'public', '.'], { tag: 'publish' });
-            const ps1 = path.join(os.tmpdir(), 'hugo-deploy.ps1');
-            fs.writeFileSync(ps1, [
-                `$pw = ConvertTo-SecureString $env:DEPLOY_PW -AsPlainText -Force`,
-                `$cred = New-Object System.Management.Automation.PSCredential('${SERVER.user}', $pw)`,
-                `Set-SCPItem -ComputerName '${SERVER.host}' -Port ${SERVER.port} -Credential $cred -AcceptKey -Path '${pkg.replace(/\\/g, '\\\\')}' -Destination '/tmp/' -Force`,
-                `$s = New-SSHSession -ComputerName '${SERVER.host}' -Port ${SERVER.port} -Credential $cred -AcceptKey`,
-                `Invoke-SSHCommand -Index $s.SessionId -Command 'rm -rf ${SERVER.webRoot}/* && tar -xzf /tmp/site.tar.gz -C ${SERVER.webRoot}' | Select-Object -ExpandProperty Output`,
-                `Remove-SSHSession -Index $s.SessionId`,
-                `Write-Output '服务器部署完成'`
-            ].join('\r\n'));
-            await run('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1], {
-                tag: 'publish',
-                env: { DEPLOY_PW: password }
-            });
-            try { fs.unlinkSync(ps1); } catch (e) {}
-            broadcast('publish', '[2/3] 服务器发布完成 → https://www.imcuer.com/');
+            const remoteCmd = `rm -rf ${srv.webRoot}/* && tar -xzf /tmp/site.tar.gz -C ${srv.webRoot} && chown -R www-data:www-data ${srv.webRoot}`;
+
+            if (useKey) {
+                // 系统 OpenSSH 客户端：优先用指定的密钥文件，否则自动使用 ~/.ssh/ 下的默认密钥
+                const keyArgs = srv.keyFile ? ['-i', srv.keyFile] : [];
+                await run('scp', [...keyArgs, '-P', String(srv.port), '-o', 'BatchMode=yes', pkg, `${srv.user}@${srv.host}:/tmp/site.tar.gz`], { tag: 'publish', shell: false });
+                await run('ssh', [...keyArgs, '-p', String(srv.port), '-o', 'BatchMode=yes', `${srv.user}@${srv.host}`, remoteCmd], { tag: 'publish', shell: false });
+            } else {
+                // 密码方式：走 Posh-SSH
+                const ps1 = path.join(os.tmpdir(), 'hugo-deploy.ps1');
+                fs.writeFileSync(ps1, [
+                    `$pw = ConvertTo-SecureString $env:DEPLOY_PW -AsPlainText -Force`,
+                    `$cred = New-Object System.Management.Automation.PSCredential('${srv.user}', $pw)`,
+                    `Set-SCPItem -ComputerName '${srv.host}' -Port ${srv.port} -Credential $cred -AcceptKey -Path '${pkg.replace(/\\/g, '\\\\')}' -Destination '/tmp/' -Force`,
+                    `$s = New-SSHSession -ComputerName '${srv.host}' -Port ${srv.port} -Credential $cred -AcceptKey`,
+                    `Invoke-SSHCommand -Index $s.SessionId -Command '${remoteCmd}' | Select-Object -ExpandProperty Output`,
+                    `Remove-SSHSession -Index $s.SessionId`,
+                    `Write-Output '服务器部署完成'`
+                ].join('\r\n'));
+                await run('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1], {
+                    tag: 'publish',
+                    env: { DEPLOY_PW: password }
+                });
+                try { fs.unlinkSync(ps1); } catch (e) {}
+            }
+            broadcast('publish', '[2/3] 服务器发布完成');
         }
 
         if (targetGithub) {
