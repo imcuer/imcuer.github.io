@@ -25,63 +25,114 @@
         </div>
         {{ partial "footer/include.html" . }}
 
-        <!-- 后台管理视觉编辑脚本：仅在 ?edit=1 且被 iframe 嵌入时生效 -->
+        <!-- 后台管理可视化编辑：元素选择脚本 -->
         <script>
         (function() {
             const params = new URLSearchParams(location.search);
             if (!params.has('edit') || window.parent === window) return;
 
-            let highlighted = null;
+            let selectedEl = null;
+            let hoverEl = null;
+            let elementCounter = 0;
 
-            function findSourceLine(el) {
-                // 从元素文本推断在 Markdown 源码中的位置
-                // 策略：提取元素的纯文本内容（前 50 字符），让父页面去搜索
-                const text = el.textContent.trim().slice(0, 50);
-                if (text) {
-                    window.parent.postMessage({ type: 'hugo-edit-click', text: text }, '*');
+            // 为所有元素添加唯一标识
+            function markElements() {
+                document.querySelectorAll('*').forEach(el => {
+                    if (el === document.body || el === document.documentElement) return;
+                    if (!el.hasAttribute('data-hugo-edit-id')) {
+                        el.setAttribute('data-hugo-edit-id', 'hugo-' + (elementCounter++));
+                    }
+                });
+            }
+            markElements();
+
+            function deselectElement() {
+                if (selectedEl) {
+                    selectedEl.style.outline = '';
+                    selectedEl.style.outlineOffset = '';
+                    selectedEl = null;
                 }
             }
 
-            function highlight(el) {
-                if (highlighted) highlighted.style.outline = '';
-                highlighted = el;
-                el.style.outline = '2px dashed #58a6ff';
-                el.style.outlineOffset = '4px';
+            function highlightElement(el) {
+                if (hoverEl && hoverEl !== selectedEl) {
+                    hoverEl.style.outline = '';
+                    hoverEl.style.outlineOffset = '';
+                }
+                hoverEl = el;
+                if (el !== selectedEl) {
+                    el.style.outline = '2px dashed #58a6ff';
+                    el.style.outlineOffset = '2px';
+                }
             }
 
-            // 监听点击事件，只处理文章正文区域内的元素
-            document.addEventListener('click', function(e) {
-                const articleContent = document.querySelector('.article-content');
-                if (!articleContent || !articleContent.contains(e.target)) return;
+            function selectElement(el) {
+                deselectElement();
+                selectedEl = el;
+                el.style.outline = '2px solid #1f6feb';
+                el.style.outlineOffset = '2px';
+                const editId = el.getAttribute('data-hugo-edit-id');
+                window.parent.postMessage({
+                    type: 'hugo-element-select',
+                    info: {
+                        editId: editId,
+                        tag: el.tagName.toLowerCase(),
+                        text: el.textContent,
+                        className: el.className,
+                        id: el.id,
+                        style: el.style.cssText,
+                        html: el.outerHTML
+                    }
+                }, '*');
+            }
 
+            // 监听父页面消息
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.type === 'hugo-update-element' && e.data.editId) {
+                    // 通过 editId 找到元素
+                    const el = document.querySelector(`[data-hugo-edit-id="${e.data.editId}"]`);
+                    if (!el) return;
+                    if (e.data.text !== undefined) el.textContent = e.data.text;
+                    if (e.data.className !== undefined) el.className = e.data.className;
+                    if (e.data.id !== undefined) el.id = e.data.id;
+                    if (e.data.style !== undefined) el.style.cssText = e.data.style;
+                    window.parent.postMessage({ type: 'hugo-element-updated', html: el.outerHTML }, '*');
+                } else if (e.data && e.data.type === 'hugo-deselect') {
+                    deselectElement();
+                }
+            });
+
+            // 鼠标悬停高亮
+            document.addEventListener('mouseover', function(e) {
+                const el = e.target;
+                if (el === document.body || el === document.documentElement) return;
+                highlightElement(el);
+            }, true);
+
+            // 鼠标移出
+            document.addEventListener('mouseout', function(e) {
+                const el = e.target;
+                if (el !== selectedEl) {
+                    el.style.outline = '';
+                    el.style.outlineOffset = '';
+                }
+            }, true);
+
+            // 点击选中
+            document.addEventListener('click', function(e) {
+                const el = e.target;
                 e.preventDefault();
                 e.stopPropagation();
-
-                // 向上找到块级元素（p, h1-h6, li, blockquote, pre 等）
-                let el = e.target;
-                while (el && el !== articleContent) {
-                    if (/^(P|H[1-6]|LI|BLOCKQUOTE|PRE|TD|TH)$/.test(el.tagName)) break;
-                    el = el.parentElement;
-                }
-                if (el && el !== articleContent) {
-                    highlight(el);
-                    findSourceLine(el);
-                }
+                selectElement(el);
             }, true);
 
-            // 鼠标悬停时显示可编辑提示
-            document.addEventListener('mouseover', function(e) {
-                const articleContent = document.querySelector('.article-content');
-                if (!articleContent || !articleContent.contains(e.target)) return;
-                let el = e.target;
-                while (el && el !== articleContent) {
-                    if (/^(P|H[1-6]|LI|BLOCKQUOTE|PRE|TD|TH)$/.test(el.tagName)) {
-                        el.style.cursor = 'pointer';
-                        break;
-                    }
-                    el = el.parentElement;
-                }
-            }, true);
+            // ESC 取消选中
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') deselectElement();
+            });
+
+            // 通知父页面编辑模式已就绪
+            window.parent.postMessage({ type: 'hugo-edit-ready' }, '*');
         })();
         </script>
     </body>
