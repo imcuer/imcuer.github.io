@@ -24,5 +24,65 @@
             </main>
         </div>
         {{ partial "footer/include.html" . }}
+
+        <!-- 后台管理视觉编辑脚本：仅在 ?edit=1 且被 iframe 嵌入时生效 -->
+        <script>
+        (function() {
+            const params = new URLSearchParams(location.search);
+            if (!params.has('edit') || window.parent === window) return;
+
+            let highlighted = null;
+
+            function findSourceLine(el) {
+                // 从元素文本推断在 Markdown 源码中的位置
+                // 策略：提取元素的纯文本内容（前 50 字符），让父页面去搜索
+                const text = el.textContent.trim().slice(0, 50);
+                if (text) {
+                    window.parent.postMessage({ type: 'hugo-edit-click', text: text }, '*');
+                }
+            }
+
+            function highlight(el) {
+                if (highlighted) highlighted.style.outline = '';
+                highlighted = el;
+                el.style.outline = '2px dashed #58a6ff';
+                el.style.outlineOffset = '4px';
+            }
+
+            // 监听点击事件，只处理文章正文区域内的元素
+            document.addEventListener('click', function(e) {
+                const articleContent = document.querySelector('.article-content');
+                if (!articleContent || !articleContent.contains(e.target)) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                // 向上找到块级元素（p, h1-h6, li, blockquote, pre 等）
+                let el = e.target;
+                while (el && el !== articleContent) {
+                    if (/^(P|H[1-6]|LI|BLOCKQUOTE|PRE|TD|TH)$/.test(el.tagName)) break;
+                    el = el.parentElement;
+                }
+                if (el && el !== articleContent) {
+                    highlight(el);
+                    findSourceLine(el);
+                }
+            }, true);
+
+            // 鼠标悬停时显示可编辑提示
+            document.addEventListener('mouseover', function(e) {
+                const articleContent = document.querySelector('.article-content');
+                if (!articleContent || !articleContent.contains(e.target)) return;
+                let el = e.target;
+                while (el && el !== articleContent) {
+                    if (/^(P|H[1-6]|LI|BLOCKQUOTE|PRE|TD|TH)$/.test(el.tagName)) {
+                        el.style.cursor = 'pointer';
+                        break;
+                    }
+                    el = el.parentElement;
+                }
+            }, true);
+        })();
+        </script>
     </body>
 </html>

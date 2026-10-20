@@ -248,7 +248,7 @@ function updatePreview() {
         return;
     }
     const path = currentType === 'post' ? `/p/${currentSlug}/` : `/${currentSlug}/`;
-    const url = `http://localhost:1313${path}`;
+    const url = `http://localhost:1313${path}?edit=1`;   // 注入编辑脚本
     frame.src = url;
     urlSpan.textContent = path;
     frame.classList.remove('hidden');
@@ -257,6 +257,49 @@ function updatePreview() {
 
 function refreshPreview() {
     if ($('preview-frame').src) $('preview-frame').contentWindow.location.reload();
+}
+
+/* ---------- 接收 iframe 点击消息 ---------- */
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'hugo-edit-click' && e.data.text) {
+        const text = e.data.text.trim();
+        if (!editor || !text) return;
+        // 在 Markdown 源码中查找并定位
+        const md = editor.getMarkdown();
+        const idx = md.indexOf(text);
+        if (idx === -1) {
+            // 尝试模糊匹配（前 3 个单词）
+            const words = text.split(/\s+/).filter(w => w.length > 2).slice(0, 3).join(' ');
+            if (words && md.indexOf(words) !== -1) {
+                showStatus(`预览点击定位 → "${text.slice(0, 30)}..."`);
+            } else {
+                showStatus(`未在源码中找到: "${text.slice(0, 30)}..."`);
+            }
+            return;
+        }
+        // 计算行列位置
+        const before = md.slice(0, idx);
+        const line = before.split('\n').length - 1;
+        const col = idx - before.lastIndexOf('\n') - 1;
+        // 切换到 Markdown 模式并定位
+        if (editor.getCurrentPreviewEditor) {
+            // WYSIWYG 模式：切换到 Markdown 模式定位
+            editor.changeMode('markdown');
+            setTimeout(() => {
+                editor.setSelection([line, col], [line, col + text.length]);
+                editor.scrollTop(line * 20);
+            }, 100);
+        } else {
+            editor.setSelection([line, col], [line, col + text.length]);
+            editor.scrollTop(line * 20);
+        }
+        showStatus(`预览点击定位 → "${text.slice(0, 30)}${text.length > 30 ? '...' : ''}"`);
+    }
+});
+
+function showStatus(msg) {
+    $('save-status').textContent = msg;
+    setTimeout(() => { if ($('save-status').textContent === msg) $('save-status').textContent = ''; }, 3000);
 }
 
 /* ---------- 分栏拖拽 ---------- */
